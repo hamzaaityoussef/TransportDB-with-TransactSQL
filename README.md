@@ -37,7 +37,7 @@ Le projet inclut la création de 40 procédures stockées et triggers pour autom
 
 
 
-
+#for complete ennonce you can check ennonce_projet.pdf
 
 Procédures Stockées
 Insertion d'un Nouvel Employé :
