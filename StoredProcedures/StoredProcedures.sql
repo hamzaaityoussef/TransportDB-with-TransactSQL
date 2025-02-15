@@ -161,3 +161,47 @@ BEGIN
         V.VehiculeID;
 END
 GO
+
+
+-- 9 /  procédure stockée pour enregistrer un trajet effectué
+
+CREATE PROCEDURE EnregistrerTrajetEffectue
+    @EmployeID INT,
+    @VehiculeID INT,
+    @ConducteurID INT,
+    @Itineraire NVARCHAR(255),
+    @DateDepart DATE,
+    @HeureDepart TIME,
+    @DateArrivee DATE,
+    @HeureArrivee TIME,
+    @PointCollecte NVARCHAR(255),
+    @PointDepot NVARCHAR(255),
+    @DistanceKM DECIMAL(10,2),
+    @TarifParKM DECIMAL(10,2),
+    @TarifParHeure DECIMAL(10,2)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    DECLARE @TrajetID INT, @DureeHeures DECIMAL(10,2), @CoutTotal DECIMAL(10,2);
+    
+    -- Insérer un nouveau trajet
+    INSERT INTO Trajets (Itineraire, DateDepart, HeureDepart, DateArrivee, HeureArrivee, PointCollecte, PointDepot)
+    VALUES (@Itineraire, @DateDepart, @HeureDepart, @DateArrivee, @HeureArrivee, @PointCollecte, @PointDepot);
+    
+    SET @TrajetID = SCOPE_IDENTITY();
+    
+    -- Calcul de la durée en heures
+    SET @DureeHeures = DATEDIFF(MINUTE, CAST(@DateDepart AS DATETIME) + CAST(@HeureDepart AS DATETIME),
+                                       CAST(@DateArrivee AS DATETIME) + CAST(@HeureArrivee AS DATETIME)) / 60.0;
+    
+    -- Calcul du coût total
+    SET @CoutTotal = (@DistanceKM * @TarifParKM) + (@DureeHeures * @TarifParHeure);
+    
+    -- Enregistrer la réservation avec les détails
+    INSERT INTO Reservations (EmployeID, TrajetID, VehiculeID, ConducteurID)
+    VALUES (@EmployeID, @TrajetID, @VehiculeID, @ConducteurID);
+    
+    -- Retourner le coût total
+    SELECT @CoutTotal AS CoutTotal;
+END;
