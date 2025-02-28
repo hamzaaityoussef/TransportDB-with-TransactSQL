@@ -276,39 +276,39 @@ BEGIN
 END;
 
 -- Question 6 : 
+
 CREATE PROCEDURE ReserverVehicule
     @EmployeID INT,
-    @VehiculeID INT,
-    @DateHeureDepart DATETIME,
-    @DateHeureArrivee DATETIME
+    @TrajetID INT,
+    @DateDepart DATE,
+    @HeureDepart TIME,
+    @VehiculeID INT OUTPUT
 AS
 BEGIN
-    -- Vérifier si le véhicule est disponible à la date et à l'heure demandées
-    IF EXISTS (
-        SELECT 1
-        FROM dbo.Reservations
-        WHERE VehiculeID = @VehiculeID
-          AND (
-              (@DateHeureDepart BETWEEN DateHeureDepart AND DateHeureArrivee) OR
-              (@DateHeureArrivee BETWEEN DateHeureDepart AND DateHeureArrivee) OR
-              (DateHeureDepart BETWEEN @DateHeureDepart AND @DateHeureArrivee) OR
-              (DateHeureArrivee BETWEEN @DateHeureDepart AND @DateHeureArrivee)
-          )
+
+    -- Check available vehicles at the requested date and time
+    DECLARE @AvailableVehiculeID INT;
+
+    SELECT TOP 1 @AvailableVehiculeID = V.VehiculeID
+    FROM Vehicules as V
+    WHERE V.VehiculeID NOT IN (
+        SELECT R.VehiculeID FROM Reservations R
+        JOIN Trajets T ON R.TrajetID = T.TrajetID
+        WHERE T.DateDepart = @DateDepart AND T.HeureDepart = @HeureDepart
     )
+    ORDER BY V.VehiculeID;
+
+    -- If a vehicle is available, make a reservation
+    IF @AvailableVehiculeID IS NOT NULL
     BEGIN
-        PRINT 'Le véhicule n''est pas disponible aux dates et heures demandées.';
-        RETURN;
-    END;
+        INSERT INTO Reservations (EmployeID, TrajetID, VehiculeID, ConducteurID)
+        VALUES (@EmployeID, @TrajetID, @AvailableVehiculeID, NULL);
 
-    -- Générer un numéro de réservation unique
-    DECLARE @NumeroReservation UNIQUEIDENTIFIER;
-    SET @NumeroReservation = NEWID();
-
-    -- Insérer la réservation
-    INSERT INTO dbo.Reservations (EmployeID, VehiculeID, DateHeureDepart, DateHeureArrivee, NumeroReservation)
-    VALUES (@EmployeID, @VehiculeID, @DateHeureDepart, @DateHeureArrivee, @NumeroReservation);
-
-    PRINT 'La réservation a été effectuée avec succès. Numéro de réservation : ' + CAST(@NumeroReservation AS NVARCHAR(36));
+        SET @VehiculeID = @AvailableVehiculeID;
+    END
+    ELSE
+    BEGIN
+        SET @VehiculeID = NULL;
+    END
 END;
 
--- Question 8 :
