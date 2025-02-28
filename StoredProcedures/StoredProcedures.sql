@@ -312,3 +312,33 @@ BEGIN
     END
 END;
 
+--Question 8 : 
+CREATE PROCEDURE AttribuerVehicule
+    @EmployeID INT,
+    @TrajetID INT,
+    @CapaciteRequise INT,
+    @TypeVehicule NVARCHAR(50),
+    @VehiculeID INT OUTPUT
+AS
+BEGIN
+
+    -- Find the most suitable available vehicle
+    SELECT TOP 1 @VehiculeID = V.VehiculeID
+    FROM Vehicules V
+    WHERE V.Capacite >= @CapaciteRequise
+      AND V.Type = @TypeVehicule
+      AND V.VehiculeID NOT IN (
+          SELECT VehiculeID FROM Reservations
+          WHERE TrajetID = @TrajetID
+      )
+    ORDER BY V.Capacite ASC;  -- Prefer smaller but sufficient vehicles
+
+    -- If a vehicle is available, register the reservation
+    IF @VehiculeID IS NOT NULL
+    BEGIN
+        INSERT INTO Reservations (EmployeID, TrajetID, VehiculeID, ConducteurID)
+        VALUES (@EmployeID, @TrajetID, @VehiculeID, NULL);
+    END
+END;
+
+
