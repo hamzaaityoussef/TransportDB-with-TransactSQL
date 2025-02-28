@@ -209,3 +209,106 @@ END;
 
 --------------------------------------------------------------------------------------------------
 -- part of diae :
+
+-- Question 2 : 
+
+CREATE PROCEDURE CheckInfo
+    @EmployeID INT,
+    @Nom NVARCHAR(100),
+    @Email NVARCHAR(100),
+    @DateNaissance DATE
+AS
+BEGIN
+    -- Vérifier le format de l'email
+    IF @Email NOT LIKE '%_@__%.__%'
+    BEGIN
+        PRINT 'Erreur: Format d''email invalide.';
+        RETURN;
+    END;
+
+    -- Vérifier que la date de naissance est dans le passé
+    IF @DateNaissance >= GETDATE()
+    BEGIN
+        PRINT 'Erreur: Date de naissance invalide.';
+        RETURN;
+    END;
+
+    -- Si les données sont valides, procéder à la mise à jour
+    UPDATE dbo.Employes
+    SET Nom = @Nom,
+        Email = @Email,
+        DateNaissance = @DateNaissance
+    WHERE EmployeID = @EmployeID;
+
+    PRINT 'Mise à jour réussie.';
+END;
+
+-- test de la Q2  : 
+EXEC CheckInfo @EmployeID = 2, @Nom = 'Jean Dupont', @Email = 'jean.dupont', @DateNaissance = '2026-05-15';
+
+
+-- Question 4 :
+
+CREATE PROCEDURE AjouterVehicule
+    @Type NVARCHAR(100),
+    @Capacite INT,
+    @Maintenance NVARCHAR(MAX)
+AS
+BEGIN
+    -- Vérifier si un véhicule avec les mêmes caractéristiques existe déjà
+    IF EXISTS (
+        SELECT *
+        FROM dbo.Vehicules
+        WHERE Type = @Type
+          AND Capacite = @Capacite
+          AND Maintenance = @Maintenance
+    )
+    BEGIN
+        PRINT 'Un véhicule avec les mêmes caractéristiques existe déjà.';
+        RETURN;
+    END;
+
+    -- Si aucun véhicule similaire n'existe, ajouter le nouveau véhicule
+    INSERT INTO dbo.Vehicules (Type, Capacite, Maintenance)
+    VALUES (@Type, @Capacite, @Maintenance);
+
+    PRINT 'Le véhicule a été ajouté avec succès.';
+END;
+
+-- Question 6 : 
+CREATE PROCEDURE ReserverVehicule
+    @EmployeID INT,
+    @VehiculeID INT,
+    @DateHeureDepart DATETIME,
+    @DateHeureArrivee DATETIME
+AS
+BEGIN
+    -- Vérifier si le véhicule est disponible à la date et à l'heure demandées
+    IF EXISTS (
+        SELECT 1
+        FROM dbo.Reservations
+        WHERE VehiculeID = @VehiculeID
+          AND (
+              (@DateHeureDepart BETWEEN DateHeureDepart AND DateHeureArrivee) OR
+              (@DateHeureArrivee BETWEEN DateHeureDepart AND DateHeureArrivee) OR
+              (DateHeureDepart BETWEEN @DateHeureDepart AND @DateHeureArrivee) OR
+              (DateHeureArrivee BETWEEN @DateHeureDepart AND @DateHeureArrivee)
+          )
+    )
+    BEGIN
+        PRINT 'Le véhicule n''est pas disponible aux dates et heures demandées.';
+        RETURN;
+    END;
+
+    -- Générer un numéro de réservation unique
+    DECLARE @NumeroReservation UNIQUEIDENTIFIER;
+    SET @NumeroReservation = NEWID();
+
+    -- Insérer la réservation
+    INSERT INTO dbo.Reservations (EmployeID, VehiculeID, DateHeureDepart, DateHeureArrivee, NumeroReservation)
+    VALUES (@EmployeID, @VehiculeID, @DateHeureDepart, @DateHeureArrivee, @NumeroReservation);
+
+    PRINT 'La réservation a été effectuée avec succès. Numéro de réservation : ' + CAST(@NumeroReservation AS NVARCHAR(36));
+END;
+
+-- Question 8 :
