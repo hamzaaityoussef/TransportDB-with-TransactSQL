@@ -1,5 +1,5 @@
 
---1/ procédure stockée qui insère un nouvel employé
+--1/ procï¿½dure stockï¿½e qui insï¿½re un nouvel employï¿½
 CREATE PROCEDURE sp_InsertEmploye
     @Nom NVARCHAR(100),
     @Entreprise NVARCHAR(100),
@@ -11,7 +11,7 @@ BEGIN
     
     IF EXISTS (SELECT 1 FROM Employes WHERE Email = @Email)
     BEGIN
-        PRINT 'Erreur : Cet email est déjà utilisé par un autre employé.';
+        PRINT 'Erreur : Cet email est dï¿½jï¿½ utilisï¿½ par un autre employï¿½.';
         RETURN; 
     END
 
@@ -19,13 +19,13 @@ BEGIN
     INSERT INTO Employes (Nom, Entreprise, Poste, Coordonnees,Email)
     VALUES (@Nom, @Entreprise, @Poste, @Coordonnees,@Email);
 
-    PRINT 'Nouvel employé ajouté avec succès.';
+    PRINT 'Nouvel employï¿½ ajoutï¿½ avec succï¿½s.';
 END
 GO
 
 
 
---3/ Procédure Stockée pour Supprimer un Employé et annuler les trajets réservés	
+--3/ Procï¿½dure Stockï¿½e pour Supprimer un Employï¿½ et annuler les trajets rï¿½servï¿½s	
 CREATE PROCEDURE sp_DeleteEmploye
     @EmployeID INT 
 AS
@@ -33,7 +33,7 @@ BEGIN
     
     IF NOT EXISTS (SELECT 1 FROM Employes WHERE EmployeID = @EmployeID)
     BEGIN
-        PRINT 'Erreur : L''employé avec l''ID ' + CAST(@EmployeID AS NVARCHAR) + ' n''existe pas.';
+        PRINT 'Erreur : L''employï¿½ avec l''ID ' + CAST(@EmployeID AS NVARCHAR) + ' n''existe pas.';
         RETURN;
     END
 
@@ -50,7 +50,7 @@ BEGIN
 
         COMMIT TRANSACTION;
 
-        PRINT 'L''employé avec l''ID ' + CAST(@EmployeID AS NVARCHAR) + ' a été supprimé avec succès.';
+        PRINT 'L''employï¿½ avec l''ID ' + CAST(@EmployeID AS NVARCHAR) + ' a ï¿½tï¿½ supprimï¿½ avec succï¿½s.';
     END TRY
     BEGIN CATCH
         ROLLBACK TRANSACTION;
@@ -66,7 +66,7 @@ GO
 
 
 
---5/ Procédure Stockée pour Mettre à Jour un Véhicule
+--5/ Procï¿½dure Stockï¿½e pour Mettre ï¿½ Jour un Vï¿½hicule
 CREATE PROCEDURE sp_UpdateVehicule
     @VehiculeID INT, 
     @Type NVARCHAR(50), 
@@ -78,22 +78,22 @@ BEGIN
     
     IF NOT EXISTS (SELECT 1 FROM Vehicules WHERE VehiculeID = @VehiculeID)
     BEGIN
-        PRINT 'Erreur : Le véhicule avec l''ID ' + CAST(@VehiculeID AS NVARCHAR) + ' n''existe pas.';
+        PRINT 'Erreur : Le vï¿½hicule avec l''ID ' + CAST(@VehiculeID AS NVARCHAR) + ' n''existe pas.';
         RETURN;
     END
 
-    -- Vérifier les contraintes d'intégrité
-    --  La capacité ne doit pas dépasser 100
+    -- Vï¿½rifier les contraintes d'intï¿½gritï¿½
+    --  La capacitï¿½ ne doit pas dï¿½passer 100
     IF @Capacite > 100
     BEGIN
-        PRINT 'Erreur : La capacité du véhicule ne peut pas dépasser 100.';
+        PRINT 'Erreur : La capacitï¿½ du vï¿½hicule ne peut pas dï¿½passer 100.';
         RETURN;
     END
 
-    -- Vérifier que l'immatriculation n'est pas déjà utilisée par un autre véhicule
+    -- Vï¿½rifier que l'immatriculation n'est pas dï¿½jï¿½ utilisï¿½e par un autre vï¿½hicule
     IF EXISTS (SELECT 1 FROM Vehicules WHERE Immatriculation = @Immatriculation AND VehiculeID <> @VehiculeID)
     BEGIN
-        PRINT 'Erreur : L''immatriculation ' + @Immatriculation + ' est déjà utilisée par un autre véhicule.';
+        PRINT 'Erreur : L''immatriculation ' + @Immatriculation + ' est dï¿½jï¿½ utilisï¿½e par un autre vï¿½hicule.';
         RETURN;
     END
 
@@ -113,7 +113,7 @@ BEGIN
         COMMIT TRANSACTION;
 
        
-        PRINT 'Les informations du véhicule avec l''ID ' + CAST(@VehiculeID AS NVARCHAR) + ' ont été mises à jour avec succès.';
+        PRINT 'Les informations du vï¿½hicule avec l''ID ' + CAST(@VehiculeID AS NVARCHAR) + ' ont ï¿½tï¿½ mises ï¿½ jour avec succï¿½s.';
     END TRY
     BEGIN CATCH
         
@@ -130,7 +130,7 @@ GO
 
 
 
--- 7/ Procédure Stockée pour Vérifier la Disponibilité des Véhicules
+-- 7/ Procï¿½dure Stockï¿½e pour Vï¿½rifier la Disponibilitï¿½ des Vï¿½hicules
 
 CREATE PROCEDURE sp_CheckVehiculeDisponibility
     @Date DATE 
@@ -149,7 +149,7 @@ BEGIN
         
         V.Maintenance IS NULL OR V.Maintenance <> @Date
         AND
-        -- Vérifier que le véhicule n'est pas déjà réservé pour cette date
+        -- Vï¿½rifier que le vï¿½hicule n'est pas dï¿½jï¿½ rï¿½servï¿½ pour cette date
         NOT EXISTS (
             SELECT 1
             FROM Reservations R
@@ -163,7 +163,7 @@ END
 GO
 
 
--- 9 /  procédure stockée pour enregistrer un trajet effectué
+-- 9 /  procï¿½dure stockï¿½e pour enregistrer un trajet effectuï¿½
 
 CREATE PROCEDURE EnregistrerTrajetEffectue
     @EmployeID INT,
@@ -185,23 +185,27 @@ BEGIN
     
     DECLARE @TrajetID INT, @DureeHeures DECIMAL(10,2), @CoutTotal DECIMAL(10,2);
     
-    -- Insérer un nouveau trajet
+    -- Insï¿½rer un nouveau trajet
     INSERT INTO Trajets (Itineraire, DateDepart, HeureDepart, DateArrivee, HeureArrivee, PointCollecte, PointDepot)
     VALUES (@Itineraire, @DateDepart, @HeureDepart, @DateArrivee, @HeureArrivee, @PointCollecte, @PointDepot);
     
     SET @TrajetID = SCOPE_IDENTITY();
     
-    -- Calcul de la durée en heures
+    -- Calcul de la durï¿½e en heures
     SET @DureeHeures = DATEDIFF(MINUTE, CAST(@DateDepart AS DATETIME) + CAST(@HeureDepart AS DATETIME),
                                        CAST(@DateArrivee AS DATETIME) + CAST(@HeureArrivee AS DATETIME)) / 60.0;
     
-    -- Calcul du coût total
+    -- Calcul du coï¿½t total
     SET @CoutTotal = (@DistanceKM * @TarifParKM) + (@DureeHeures * @TarifParHeure);
     
-    -- Enregistrer la réservation avec les détails
+    -- Enregistrer la rï¿½servation avec les dï¿½tails
     INSERT INTO Reservations (EmployeID, TrajetID, VehiculeID, ConducteurID)
     VALUES (@EmployeID, @TrajetID, @VehiculeID, @ConducteurID);
     
-    -- Retourner le coût total
+    -- Retourner le coï¿½t total
     SELECT @CoutTotal AS CoutTotal;
 END;
+
+
+--------------------------------------------------------------------------------------------------
+-- part of diae :
