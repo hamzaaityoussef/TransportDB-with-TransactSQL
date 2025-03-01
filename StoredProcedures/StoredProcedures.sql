@@ -341,4 +341,32 @@ BEGIN
     END
 END;
 
+-- Question 10 : 
 
+CREATE PROCEDURE GenererRapportTrajets
+    @DateDebut DATE,
+    @DateFin DATE
+AS
+BEGIN
+
+    SELECT 
+        R.ReservationID,
+        E.Nom AS Employe,
+        V.Immatriculation AS Vehicule,
+        C.Nom AS Conducteur,
+        T.Itineraire,
+        T.DateDepart,
+        T.HeureDepart,
+        T.DateArrivee,
+        T.HeureArrivee,
+        DATEDIFF(HOUR, T.HeureDepart, T.HeureArrivee) AS DureeHeures
+    FROM Reservations R
+    JOIN Employes E ON R.EmployeID = E.EmployeID
+    JOIN Vehicules V ON R.VehiculeID = V.VehiculeID
+    JOIN Conducteurs C ON R.ConducteurID = C.ConducteurID
+    JOIN Trajets T ON R.TrajetID = T.TrajetID
+    WHERE T.DateDepart BETWEEN @DateDebut AND @DateFin
+    ORDER BY T.DateDepart;
+END;
+
+-- Question 12 :
