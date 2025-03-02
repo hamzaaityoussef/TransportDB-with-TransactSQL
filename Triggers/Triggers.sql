@@ -112,3 +112,31 @@ BEGIN
         inserted;
 END
 GO
+
+
+--Question 39 :  
+--je ne peux pas avoir plusieurs triggers INSTEAD OF INSERT sur la même table (Reservations)
+--donc je vais utiliser ici  AFTER INSERT (ne peux pas empêcher l'insertion de données, mais ils peuvent annuler
+-- la transaction si une condition n'est pas respectée.
+
+CREATE TRIGGER trg_PreventOverlappingReservations
+ON Reservations
+AFTER INSERT
+AS
+BEGIN
+    -- Vérifier si l'employé a déjà un trajet en cours
+    IF EXISTS (
+        SELECT 1
+        FROM inserted I
+        JOIN Reservations R ON I.EmployeID = R.EmployeID
+        JOIN Trajets T ON R.TrajetID = T.TrajetID
+        WHERE T.DateArrivee > GETDATE() -- Trajet en cours
+    )
+    BEGIN
+        -- Annuler la transaction et afficher un message d'erreur
+        RAISERROR('L''employé a déjà un trajet en cours. Impossible d''ajouter une nouvelle réservation.', 16, 1);
+        ROLLBACK TRANSACTION;
+        RETURN;
+    END
+END
+GO
