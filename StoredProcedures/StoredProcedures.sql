@@ -206,6 +206,55 @@ BEGIN
     SELECT @CoutTotal AS CoutTotal;
 END;
 
+-- Question 11 
+
+USE TransportDB;
+GO
+CREATE PROCEDURE sp_CalculateTotalCostForVehicle
+    @VehiculeID INT, -- Identifiant du véhicule
+    @StartDate DATE, -- Date de début de la période
+    @EndDate DATE, -- Date de fin de la période
+    @PrixCarburant DECIMAL(18, 2) -- Prix du carburant par unité (ex: L/km)
+AS
+BEGIN
+    -- Variables pour les coûts
+    DECLARE @TotalCost DECIMAL(18, 2) = 0;
+    DECLARE @FuelCost DECIMAL(18, 2) = 0;
+    DECLARE @TollCost DECIMAL(18, 2) = 0;
+    DECLARE @MaintenanceCost DECIMAL(18, 2) = 0;
+    DECLARE @Discount DECIMAL(18, 2) = 0; -- Remise applicable
+
+    -- Calculer les coûts pour chaque trajet
+    SELECT 
+        @FuelCost = SUM(T.Distance * V.ConsommationCarburant * @PrixCarburant), -- Coût du carburant
+        @TollCost = SUM(T.Peages), -- Coût des péages
+        @MaintenanceCost = SUM(V.FraisMaintenance) -- Coût de maintenance
+    FROM 
+        Trajets T
+    JOIN 
+        Reservations R ON T.TrajetID = R.TrajetID -- Relier les trajets aux réservations
+    JOIN 
+        Vehicules V ON R.VehiculeID = V.VehiculeID -- Relier les réservations aux véhicules
+    WHERE 
+        R.VehiculeID = @VehiculeID
+        AND T.DateDepart BETWEEN @StartDate AND @EndDate;
+
+    -- Appliquer une remise (exemple : 10% de remise)
+    SET @Discount = (@FuelCost + @TollCost + @MaintenanceCost) * 0.10;
+
+    -- Calculer le coût total
+    SET @TotalCost = (@FuelCost + @TollCost + @MaintenanceCost) - @Discount;
+
+    -- Afficher le résultat
+    SELECT 
+        @VehiculeID AS VehiculeID,
+        @FuelCost AS FuelCost,
+        @TollCost AS TollCost,
+        @MaintenanceCost AS MaintenanceCost,
+        @Discount AS Discount,
+        @TotalCost AS TotalCost;
+END
+GO
 
 --------------------------------------------------------------------------------------------------
 -- part of diae :
