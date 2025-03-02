@@ -532,6 +532,37 @@ GO
 
 
 
+--Question 29 : 
+
+CREATE PROCEDURE sp_GenerateVehicleUsageReport
+    @Mois INT, -- Mois pour le rapport
+    @Annee INT -- Année pour le rapport
+AS
+BEGIN
+    SELECT 
+        V.VehiculeID,
+        V.Type,
+        COUNT(T.TrajetID) AS NombreTrajets,
+        SUM(T.Distance) AS KilometresParcourus,
+        SUM(T.Peages + (V.ConsommationCarburant * T.Distance) + V.FraisMaintenance) AS CoutTotal
+    FROM 
+        Vehicules V
+    JOIN 
+        Reservations R ON V.VehiculeID = R.VehiculeID
+    JOIN 
+        Trajets T ON R.TrajetID = T.TrajetID
+    WHERE 
+        MONTH(T.DateDepart) = @Mois
+        AND YEAR(T.DateDepart) = @Annee
+    GROUP BY 
+        V.VehiculeID, V.Type;
+END
+GO
+
+
+
+
+
 
 
 
