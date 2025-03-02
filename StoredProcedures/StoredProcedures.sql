@@ -432,6 +432,73 @@ END
 GO
 
 
+--Question 21 :
+
+CREATE PROCEDURE sp_RecordIncident
+    @TrajetID INT, -- Identifiant du trajet
+    @Cause NVARCHAR(255), -- Cause de l'incident (météo, panne, accident)
+    @TempsPerdu INT, -- Temps perdu en minutes
+    @Responsable NVARCHAR(100) -- Responsable à notifier
+AS
+BEGIN
+    -- Enregistrer l'incident dans une table Incidents
+    INSERT INTO Incidents (TrajetID, Cause, TempsPerdu, Responsable, DateIncident)
+    VALUES (@TrajetID, @Cause, @TempsPerdu, @Responsable, GETDATE());
+
+    -- Notifier le responsable (exemple : enregistrer dans une table de notifications)
+    INSERT INTO Notifications (Message, Destinataire, DateNotification)
+    VALUES ('Un incident a été enregistré pour le trajet ' + CAST(@TrajetID AS NVARCHAR) + '. Cause : ' + @Cause, @Responsable, GETDATE());
+
+    PRINT 'Incident enregistré et responsable notifié.';
+END
+GO
+
+
+
+-- Question 23 :
+
+CREATE PROCEDURE sp_PlanifierTrajets
+    @EmployeID INT, -- Identifiant de l'employé
+    @ZoneGeographique NVARCHAR(100), -- Zone géographique de l'employé
+    @HeureDebut TIME, -- Heure de début du travail
+    @HeureFin TIME -- Heure de fin du travail
+AS
+BEGIN
+    -- Trouver un véhicule disponible dans la zone géographique
+    SELECT TOP 1
+        V.VehiculeID,
+        V.Type,
+        V.Capacite
+    FROM 
+        Vehicules V
+    WHERE 
+        V.Disponible = 1 -- Véhicule disponible
+        AND V.ZoneGeographique = @ZoneGeographique -- Zone géographique correspondante
+        AND NOT EXISTS (
+            SELECT 1 
+            FROM Reservations R 
+            JOIN Trajets T ON R.TrajetID = T.TrajetID
+            WHERE R.VehiculeID = V.VehiculeID
+              AND T.HeureDepart BETWEEN @HeureDebut AND @HeureFin -- Vérifier la disponibilité horaire
+        )
+    ORDER BY 
+        V.Capacite DESC; -- Priorité aux véhicules avec la plus grande capacité
+
+    -- Affecter le véhicule à l'employé
+    IF @@ROWCOUNT > 0
+    BEGIN
+        PRINT 'Véhicule trouvé et affecté à l''employé ' + CAST(@EmployeID AS NVARCHAR);
+    END
+    ELSE
+    BEGIN
+        PRINT 'Aucun véhicule disponible pour cette zone et cette plage horaire.';
+    END
+END
+GO
+
+
+
+-- Question 25 :
 
 
 
