@@ -502,6 +502,39 @@ GO
 
 
 
+CREATE PROCEDURE sp_CalculateMaintenanceCost
+    @VehiculeID INT -- Identifiant du véhicule
+AS
+BEGIN
+    DECLARE @TotalCost DECIMAL(18, 2) = 0;
+
+    -- Calculer le coût total des réparations et des pièces de remplacement
+    SELECT 
+        @TotalCost = SUM(M.CoutReparation + M.CoutPieces)
+    FROM 
+        Maintenance M
+    WHERE 
+        M.VehiculeID = @VehiculeID;
+
+    -- Mettre à jour l'historique de maintenance
+    UPDATE Vehicules
+    SET DerniereMaintenance = GETDATE(),
+        FraisMaintenance = @TotalCost
+    WHERE 
+        VehiculeID = @VehiculeID;
+
+    -- Retourner le coût total
+    SELECT 
+        @VehiculeID AS VehiculeID,
+        @TotalCost AS TotalMaintenanceCost;
+END
+GO
+
+
+
+
+
+
 --------------------------------------------------------------------------------------------------
 -- part of diae :
 
