@@ -82,4 +82,15 @@ CREATE TABLE EvaluationsVehicules (
     FOREIGN KEY (EmployeID) REFERENCES Employes(EmployeID)
 );
 
+USE TransportDB;
+GO
 
+-- Table pour les absences
+CREATE TABLE Absences (
+    AbsenceID INT IDENTITY(1,1) PRIMARY KEY, -- Identifiant unique de l'absence
+    EmployeID INT, -- Identifiant de l'employé absent
+    DateAbsence DATE, -- Date de l'absence
+    Motif NVARCHAR(255), -- Motif de l'absence (optionnel)
+    FOREIGN KEY (EmployeID) REFERENCES Employes(EmployeID) -- Clé étrangère vers la table Employes
+);
+GO
