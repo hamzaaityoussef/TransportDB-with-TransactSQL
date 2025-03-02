@@ -370,3 +370,31 @@ BEGIN
 END;
 
 -- Question 12 :
+CREATE PROCEDURE EnregistrerEvaluation
+    @EmployeID INT,
+    @TrajetID INT,
+    @Score INT,
+    @Commentaire NVARCHAR(500)
+AS
+BEGIN
+
+    -- Vérifier si l'employé a bien effectué ce trajet
+    IF EXISTS (
+        SELECT 1 FROM Reservations
+        WHERE EmployeID = @EmployeID AND TrajetID = @TrajetID
+    )
+    BEGIN
+        -- Insérer l'évaluation
+        INSERT INTO Evaluations (EmployeID, TrajetID, Score, Commentaire)
+        VALUES (@EmployeID, @TrajetID, @Score, @Commentaire);
+
+        PRINT 'Évaluation enregistrée avec succès.';
+    END
+    ELSE
+    BEGIN
+        PRINT 'Erreur : L''employé n''a pas effectué ce trajet.';
+    END
+END;
+
+-- Question 14 :
+
