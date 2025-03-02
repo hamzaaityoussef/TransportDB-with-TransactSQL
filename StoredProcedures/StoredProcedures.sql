@@ -294,6 +294,62 @@ EXEC sp_GetEmployeesAssignedToVehicle
     @StartDate = '2023-10-01', 
     @EndDate = '2023-10-31';
 
+
+-- Question 15 : 
+
+CREATE PROCEDURE sp_AssignDriverToVehicle
+    @VehiculeID INT, 
+    @Date DATE 
+AS
+BEGIN
+    DECLARE @ConducteurID INT;
+
+    -- Trouver un conducteur disponible et qualifié
+    SELECT TOP 1
+        @ConducteurID = C.ConducteurID
+    FROM 
+        Conducteurs C
+    WHERE 
+        C.Disponible = 1 -- Conducteur disponible
+        AND C.Experience >= 5 
+        AND C.Qualifications LIKE '%Permis D%' 
+        AND NOT EXISTS (
+            SELECT 1 
+            FROM Reservations R 
+            JOIN Trajets T ON R.TrajetID = T.TrajetID
+            WHERE R.ConducteurID = C.ConducteurID
+              AND T.DateDepart = @Date 
+        )
+    ORDER BY 
+        C.Experience DESC;
+
+    -- Affecter le conducteur au véhicule
+    IF @ConducteurID IS NOT NULL
+    BEGIN
+        INSERT INTO Reservations (VehiculeID, ConducteurID, DateAffectation)
+        VALUES (@VehiculeID, @ConducteurID, @Date);
+
+        PRINT 'Conducteur ' + CAST(@ConducteurID AS NVARCHAR) + ' affecté au véhicule ' + CAST(@VehiculeID AS NVARCHAR);
+    END
+    ELSE
+    BEGIN
+        PRINT 'Aucun conducteur disponible pour cette date.';
+    END
+END
+GO
+
+
+
+
+
+
+
+
+
+
+
+
+
 --------------------------------------------------------------------------------------------------
 -- part of diae :
 
