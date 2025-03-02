@@ -398,3 +398,190 @@ END;
 
 -- Question 14 :
 
+CREATE PROCEDURE AjouterPoint
+    @Nom NVARCHAR(255),
+    @Latitude FLOAT,
+    @Longitude FLOAT,
+    @Type NVARCHAR(50)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Vérifier si un point similaire existe déjà à proximité (moins de 0.01° de différence)
+    IF EXISTS (
+        SELECT 1 FROM Points
+        WHERE ABS(Latitude - @Latitude) < 0.01
+        AND ABS(Longitude - @Longitude) < 0.01
+    )
+    BEGIN
+        PRINT 'Erreur : Un point de collecte ou dépôt proche existe déjà.';
+    END
+    ELSE
+    BEGIN
+        -- Insérer le nouveau point
+        INSERT INTO Points (Nom, Latitude, Longitude, Type)
+        VALUES (@Nom, @Latitude, @Longitude, @Type);
+
+        PRINT 'Nouveau point ajouté avec succès.';
+    END
+END;
+
+
+-- Question 16 : 
+
+CREATE PROCEDURE VerifierMaintenanceVehicule
+    @VehiculeID INT,
+    @DateTrajet DATE
+AS
+BEGIN
+
+    DECLARE @DerniereMaintenance DATE;
+
+    -- Récupérer la dernière date de maintenance du véhicule
+    SELECT @DerniereMaintenance = DerniereMaintenance 
+    FROM Vehicules 
+    WHERE VehiculeID = @VehiculeID;
+
+    -- Vérifier si le véhicule nécessite une maintenance ( la maintenance doit etre faite chaque 6 mois )
+    IF @DerniereMaintenance IS NULL OR DATEDIFF(DAY, @DerniereMaintenance, @DateTrajet) > 180
+    BEGIN
+        PRINT 'Alerte : Le véhicule doit être inspecté avant son affectation.';
+    END
+    ELSE
+    BEGIN
+        PRINT 'Le véhicule est en bon état pour être affecté.';
+    END
+END;
+
+-- Question 18 :
+CREATE PROCEDURE AfficherEvaluationsVehicules
+AS
+BEGIN
+
+    -- Afficher les notes moyennes et les commentaires des employés
+    SELECT 
+        V.VehiculeID,
+        V.Immatriculation,
+        EV.Note AS NoteIndividuelle,
+        EV.Commentaire
+    FROM EvaluationsVehicules EV
+    INNER JOIN Vehicules V ON EV.VehiculeID = V.VehiculeID
+    ORDER BY V.VehiculeID, EV.Note DESC;
+END;
+
+-- Question 20 :
+
+CREATE PROCEDURE MettreAJourStatutTrajet
+    @TrajetID INT,
+    @NouveauStatut NVARCHAR(50)
+AS
+BEGIN
+
+    -- Vérifier si le trajet existe
+    IF NOT EXISTS (SELECT 1 FROM Trajets WHERE TrajetID = @TrajetID)
+    BEGIN
+        PRINT ' Erreur : Trajet non trouvé.';
+        RETURN;
+    END;
+
+    -- Mettre à jour le statut du trajet
+    UPDATE Trajets
+    SET Statut = @NouveauStatut
+    WHERE TrajetID = @TrajetID;
+
+    PRINT ' Statut du trajet mis à jour avec succès.';
+
+    -- Simuler une notification (message)
+    PRINT ' Notification envoyée aux parties concernées.';
+END;
+
+-- Question 22 :
+CREATE PROCEDURE RapportAnnulations
+AS
+BEGIN
+
+    -- Sélectionner les trajets annulés et compter les occurrences de chaque raison
+    SELECT 
+        RaisonAnnulation,
+        COUNT(*) AS NombreAnnulations
+    FROM Trajets
+    WHERE RaisonAnnulation IS NOT NULL
+    GROUP BY RaisonAnnulation
+    ORDER BY NombreAnnulations DESC;
+END;
+
+-- Question 24 :
+
+CREATE PROCEDURE AffecterVehiculeParZone
+    @EmployeID INT,
+    @TrajetID INT,
+    @VehiculeID INT OUTPUT
+AS
+BEGIN
+
+    DECLARE @Zone NVARCHAR(100);
+
+    -- Récupérer la zone géographique de l'employé
+    SELECT @Zone = ZoneGeographique FROM Employes WHERE EmployeID = @EmployeID;
+
+    -- Sélectionner le véhicule disponible dans la même zone
+    SELECT TOP 1 @VehiculeID = V.VehiculeID
+    FROM Vehicules V
+    WHERE V.ZoneGeographique = @Zone
+      AND V.VehiculeID NOT IN (SELECT VehiculeID FROM Reservations WHERE TrajetID = @TrajetID)
+    ORDER BY NEWID();  -- Sélection aléatoire si plusieurs véhicules disponibles
+
+    -- Insérer dans la table des réservations si un véhicule est trouvé
+    IF @VehiculeID IS NOT NULL
+    BEGIN
+        INSERT INTO Reservations (EmployeID, TrajetID, VehiculeID, ConducteurID)
+        VALUES (@EmployeID, @TrajetID, @VehiculeID, NULL);
+    END
+END;
+
+--Question 26 :
+
+CREATE PROCEDURE ValiderEmployeReservation
+    @EmployeID INT,
+    @EstEligible BIT OUTPUT
+AS
+BEGIN
+
+    -- Vérifier si l'employé est éligible
+    SELECT @EstEligible = EligibleTransport FROM Employes WHERE EmployeID = @EmployeID;
+END;
+
+
+--Question 28 :
+CREATE PROCEDURE AuditTrajetsVehicules
+AS
+BEGIN
+
+    SELECT 
+        T.TrajetID,
+        E.Nom AS Employe,
+        V.Immatriculation AS Vehicule,
+        T.Itineraire,
+        T.DateDepart,
+        T.HeureDepart,
+        T.DateArrivee,
+        T.HeureArrivee,
+        DATEDIFF(MINUTE, T.HeureDepart, T.HeureArrivee) AS DureeMinutes,
+        (CASE 
+            WHEN DATEDIFF(MINUTE, T.HeureDepart, T.HeureArrivee) > 60 THEN 'Long'
+            ELSE 'Court'
+        END) AS CategorieDuree
+    FROM Trajets T
+    INNER JOIN Reservations R ON T.TrajetID = R.TrajetID
+    INNER JOIN Employes E ON R.EmployeID = E.EmployeID
+    INNER JOIN Vehicules V ON R.VehiculeID = V.VehiculeID
+    ORDER BY T.DateDepart DESC;
+END;
+
+-- Question 30 : 
+
+
+
+
+
+

@@ -63,3 +63,23 @@ CREATE TABLE Evaluations (
     FOREIGN KEY (TrajetID) REFERENCES Trajets(TrajetID)
 );
 
+CREATE TABLE Points (
+    PointID INT IDENTITY(1,1) PRIMARY KEY,
+    Nom NVARCHAR(255),
+    Latitude FLOAT,
+    Longitude FLOAT,
+    Type NVARCHAR(50) CHECK (Type IN ('Collecte', 'Depot'))
+);
+
+CREATE TABLE EvaluationsVehicules (
+    EvaluationID INT IDENTITY(1,1) PRIMARY KEY,
+    VehiculeID INT,
+    EmployeID INT,
+    Note INT CHECK (Note BETWEEN 1 AND 5),
+    Commentaire NVARCHAR(500),
+    DateEvaluation DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (VehiculeID) REFERENCES Vehicules(VehiculeID),
+    FOREIGN KEY (EmployeID) REFERENCES Employes(EmployeID)
+);
+
+
