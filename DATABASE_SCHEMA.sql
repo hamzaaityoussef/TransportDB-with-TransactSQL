@@ -94,3 +94,21 @@ CREATE TABLE Absences (
     FOREIGN KEY (EmployeID) REFERENCES Employes(EmployeID) -- Clé étrangère vers la table Employes
 );
 GO
+
+
+USE TransportDB;
+GO
+
+-- Table pour les factures
+CREATE TABLE Factures (
+    FactureID INT IDENTITY(1,1) PRIMARY KEY, -- Identifiant unique de la facture
+    TrajetID INT, -- Identifiant du trajet facturé
+    EmployeID INT, -- Identifiant de l'employé impliqué
+    VehiculeID INT, -- Identifiant du véhicule utilisé
+    DateFacture DATE, -- Date de génération de la facture
+    TotalCost DECIMAL(18, 2), -- Coût total de la facture
+    FOREIGN KEY (TrajetID) REFERENCES Trajets(TrajetID), -- Clé étrangère vers la table Trajets
+    FOREIGN KEY (EmployeID) REFERENCES Employes(EmployeID), -- Clé étrangère vers la table Employes
+    FOREIGN KEY (VehiculeID) REFERENCES Vehicules(VehiculeID) -- Clé étrangère vers la table Vehicules
+);
+GO
