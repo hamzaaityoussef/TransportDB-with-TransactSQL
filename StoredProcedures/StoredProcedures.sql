@@ -339,9 +339,68 @@ END
 GO
 
 
+-- Question 17 :
 
+CREATE PROCEDURE sp_GenerateInvoiceForTrip
+    @TrajetID INT -- Identifiant du trajet
+AS
+BEGIN
+    DECLARE @FactureID INT;
+    DECLARE @TotalCost DECIMAL(18, 2);
 
+    -- Récupérer les informations du trajet et calculer le coût total
+    SELECT 
+        @TotalCost = (T.Peages + (V.ConsommationCarburant * T.Distance) + V.FraisMaintenance)
+    FROM 
+        Trajets T
+    JOIN 
+        Reservations R ON T.TrajetID = R.TrajetID -- Relier les trajets aux réservations
+    JOIN 
+        Vehicules V ON R.VehiculeID = V.VehiculeID -- Relier les réservations aux véhicules
+    WHERE 
+        T.TrajetID = @TrajetID;
 
+    -- Insérer la facture dans la table Factures
+    INSERT INTO Factures (TrajetID, EmployeID, VehiculeID, DateFacture, TotalCost)
+    SELECT 
+        T.TrajetID,
+        R.EmployeID,
+        R.VehiculeID,
+        GETDATE(), -- Date actuelle
+        @TotalCost
+    FROM 
+        Trajets T
+    JOIN 
+        Reservations R ON T.TrajetID = R.TrajetID
+    WHERE 
+        T.TrajetID = @TrajetID;
+
+    -- Récupérer l'identifiant de la facture générée
+    SET @FactureID = SCOPE_IDENTITY();
+
+    -- Retourner la facture générée
+    SELECT 
+        F.FactureID,
+        F.TrajetID,
+        E.Nom AS EmployeeName,
+        V.Immatriculation AS VehicleRegistration,
+        T.Distance,
+        T.Peages AS TollCost,
+        V.ConsommationCarburant * T.Distance AS FuelCost,
+        V.FraisMaintenance AS MaintenanceCost,
+        F.TotalCost
+    FROM 
+        Factures F
+    JOIN 
+        Trajets T ON F.TrajetID = T.TrajetID
+    JOIN 
+        Employes E ON F.EmployeID = E.EmployeID
+    JOIN 
+        Vehicules V ON F.VehiculeID = V.VehiculeID
+    WHERE 
+        F.FactureID = @FactureID;
+END
+GO
 
 
 
