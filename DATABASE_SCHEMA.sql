@@ -1,156 +1,114 @@
-USE TransportDB; -- Replace with your database name
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
 GO
 
--- Table pour les employ�s
-CREATE TABLE Employes (
-    EmployeID INT IDENTITY(1,1) PRIMARY KEY,
-    Nom NVARCHAR(100),
-    Entreprise NVARCHAR(100),
-    Poste NVARCHAR(100),
-    Coordonnees NVARCHAR(255)
+CREATE TABLE [dbo].[Employes] (
+    [EmployeID] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    [Nom] NVARCHAR(100) NULL,
+    [Entreprise] NVARCHAR(100) NULL,
+    [Poste] NVARCHAR(100) NULL,
+    [Coordonnees] NVARCHAR(255) NULL,
+    [Email] NVARCHAR(255) NULL,
+    [ZoneGeographique] NVARCHAR(100) NULL,
+    [EligibleTransport] BIT NULL DEFAULT (1)
 );
 
--- Table pour les v�hicules
-CREATE TABLE Vehicules (
-    VehiculeID INT IDENTITY(1,1) PRIMARY KEY,
-    Type NVARCHAR(50),
-    Capacite INT,
-    Immatriculation NVARCHAR(50) UNIQUE,
-    Maintenance DATE
+CREATE TABLE [dbo].[Absences] (
+    [AbsenceID] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    [EmployeID] INT NULL,
+    [DateAbsence] DATE NULL,
+    [Motif] NVARCHAR(255) NULL,
+    FOREIGN KEY ([EmployeID]) REFERENCES [dbo].[Employes]([EmployeID])
 );
 
--- Table pour les trajets
-CREATE TABLE Trajets (
-    TrajetID INT IDENTITY(1,1) PRIMARY KEY,
-    Itineraire NVARCHAR(255),
-    DateDepart DATE,
-    HeureDepart TIME,
-    DateArrivee DATE,
-    HeureArrivee TIME,
-    PointCollecte NVARCHAR(255),
-    PointDepot NVARCHAR(255)
+CREATE TABLE [dbo].[Conducteurs] (
+    [ConducteurID] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    [Nom] NVARCHAR(100) NULL,
+    [Affectation] NVARCHAR(255) NULL,
+    [Experience] NVARCHAR(MAX) NULL,
+    [Disponible] BIT NULL DEFAULT (1),
+    [Qualifications] NVARCHAR(255) NULL
 );
 
--- Table pour les conducteurs
-CREATE TABLE Conducteurs (
-    ConducteurID INT IDENTITY(1,1) PRIMARY KEY,
-    Nom NVARCHAR(100),
-    Affectation NVARCHAR(255),
-    HistoriqueConduite NVARCHAR(MAX)
+CREATE TABLE [dbo].[Vehicules] (
+    [VehiculeID] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    [Type] NVARCHAR(50) NULL,
+    [Capacite] INT NULL,
+    [Immatriculation] NVARCHAR(50) UNIQUE,
+    [Maintenance] DATE NULL,
+    [ConsommationCarburant] DECIMAL(18, 2) NULL,
+    [FraisMaintenance] DECIMAL(18, 2) NULL,
+    [ZoneGeographique] NVARCHAR(100) NULL,
+    [Disponible] BIT NULL DEFAULT (1),
+    [DerniereMaintenance] DATE NULL,
+    [Kilometrage] INT NULL
 );
 
--- Table pour les r�servations et affectations
-CREATE TABLE Reservations (
-    ReservationID INT IDENTITY(1,1) PRIMARY KEY,
-    EmployeID INT,
-    TrajetID INT,
-    VehiculeID INT,
-    ConducteurID INT,
-    FOREIGN KEY (EmployeID) REFERENCES Employes(EmployeID),
-    FOREIGN KEY (TrajetID) REFERENCES Trajets(TrajetID),
-    FOREIGN KEY (VehiculeID) REFERENCES Vehicules(VehiculeID),
-    FOREIGN KEY (ConducteurID) REFERENCES Conducteurs(ConducteurID)
+CREATE TABLE [dbo].[Trajets] (
+    [TrajetID] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    [Itineraire] NVARCHAR(255) NULL,
+    [DateDepart] DATE NULL,
+    [HeureDepart] TIME(7) NULL,
+    [DateArrivee] DATE NULL,
+    [HeureArrivee] TIME(7) NULL,
+    [PointCollecte] NVARCHAR(255) NULL,
+    [PointDepot] NVARCHAR(255) NULL,
+    [Distance] DECIMAL(18, 2) NULL,
+    [Peages] DECIMAL(18, 2) NULL,
+    [Statut] NVARCHAR(50) NULL CHECK ([Statut] IN ('Retarde´', 'Annule´', 'Termine´', 'En cours')),
+    [RaisonAnnulation] NVARCHAR(255) NULL,
+    [CoutTotal] DECIMAL(18, 2) NULL
 );
 
-CREATE TABLE Evaluations (
-    EvaluationID INT IDENTITY(1,1) PRIMARY KEY,
-    EmployeID INT,
-    TrajetID INT,
-    Score INT CHECK (Score BETWEEN 1 AND 10), -- Score entre 1 et 10
-    Commentaire NVARCHAR(500),
-    DateEvaluation DATETIME DEFAULT GETDATE(),
-    FOREIGN KEY (EmployeID) REFERENCES Employes(EmployeID),
-    FOREIGN KEY (TrajetID) REFERENCES Trajets(TrajetID)
+CREATE TABLE [dbo].[Factures] (
+    [FactureID] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    [TrajetID] INT NULL,
+    [EmployeID] INT NULL,
+    [VehiculeID] INT NULL,
+    [DateFacture] DATE NULL,
+    [TotalCost] DECIMAL(18, 2) NULL,
+    FOREIGN KEY ([EmployeID]) REFERENCES [dbo].[Employes]([EmployeID]),
+    FOREIGN KEY ([TrajetID]) REFERENCES [dbo].[Trajets]([TrajetID]),
+    FOREIGN KEY ([VehiculeID]) REFERENCES [dbo].[Vehicules]([VehiculeID])
 );
 
-CREATE TABLE Points (
-    PointID INT IDENTITY(1,1) PRIMARY KEY,
-    Nom NVARCHAR(255),
-    Latitude FLOAT,
-    Longitude FLOAT,
-    Type NVARCHAR(50) CHECK (Type IN ('Collecte', 'Depot'))
+CREATE TABLE [dbo].[Incidents] (
+    [IncidentID] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    [TrajetID] INT NULL,
+    [Cause] NVARCHAR(255) NULL,
+    [TempsPerdu] INT NULL,
+    [Responsable] NVARCHAR(100) NULL,
+    [DateIncident] DATE NULL,
+    FOREIGN KEY ([TrajetID]) REFERENCES [dbo].[Trajets]([TrajetID])
 );
 
-CREATE TABLE EvaluationsVehicules (
-    EvaluationID INT IDENTITY(1,1) PRIMARY KEY,
-    VehiculeID INT,
-    EmployeID INT,
-    Note INT CHECK (Note BETWEEN 1 AND 5),
-    Commentaire NVARCHAR(500),
-    DateEvaluation DATETIME DEFAULT GETDATE(),
-    FOREIGN KEY (VehiculeID) REFERENCES Vehicules(VehiculeID),
-    FOREIGN KEY (EmployeID) REFERENCES Employes(EmployeID)
+CREATE TABLE [dbo].[Maintenance] (
+    [MaintenanceID] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    [VehiculeID] INT NULL,
+    [DateMaintenance] DATE NULL,
+    [Description] NVARCHAR(255) NULL,
+    [CoutReparation] DECIMAL(18, 2) NULL,
+    [CoutPieces] DECIMAL(18, 2) NULL,
+    FOREIGN KEY ([VehiculeID]) REFERENCES [dbo].[Vehicules]([VehiculeID])
 );
 
-USE TransportDB;
-GO
-
--- Table pour les absences
-CREATE TABLE Absences (
-    AbsenceID INT IDENTITY(1,1) PRIMARY KEY, -- Identifiant unique de l'absence
-    EmployeID INT, -- Identifiant de l'employé absent
-    DateAbsence DATE, -- Date de l'absence
-    Motif NVARCHAR(255), -- Motif de l'absence (optionnel)
-    FOREIGN KEY (EmployeID) REFERENCES Employes(EmployeID) -- Clé étrangère vers la table Employes
+CREATE TABLE [dbo].[Notifications] (
+    [NotificationID] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    [Message] NVARCHAR(255) NULL,
+    [Destinataire] NVARCHAR(100) NULL,
+    [DateNotification] DATE NULL
 );
-GO
 
-
-USE TransportDB;
-GO
-
--- Table pour les factures
-CREATE TABLE Factures (
-    FactureID INT IDENTITY(1,1) PRIMARY KEY, -- Identifiant unique de la facture
-    TrajetID INT, -- Identifiant du trajet facturé
-    EmployeID INT, -- Identifiant de l'employé impliqué
-    VehiculeID INT, -- Identifiant du véhicule utilisé
-    DateFacture DATE, -- Date de génération de la facture
-    TotalCost DECIMAL(18, 2), -- Coût total de la facture
-    FOREIGN KEY (TrajetID) REFERENCES Trajets(TrajetID), -- Clé étrangère vers la table Trajets
-    FOREIGN KEY (EmployeID) REFERENCES Employes(EmployeID), -- Clé étrangère vers la table Employes
-    FOREIGN KEY (VehiculeID) REFERENCES Vehicules(VehiculeID) -- Clé étrangère vers la table Vehicules
+CREATE TABLE [dbo].[Reservations] (
+    [ReservationID] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    [EmployeID] INT NULL,
+    [TrajetID] INT NULL,
+    [VehiculeID] INT NULL,
+    [ConducteurID] INT NULL,
+    [DateAffectation] DATE NULL,
+    FOREIGN KEY ([ConducteurID]) REFERENCES [dbo].[Conducteurs]([ConducteurID]),
+    FOREIGN KEY ([EmployeID]) REFERENCES [dbo].[Employes]([EmployeID]),
+    FOREIGN KEY ([TrajetID]) REFERENCES [dbo].[Trajets]([TrajetID]),
+    FOREIGN KEY ([VehiculeID]) REFERENCES [dbo].[Vehicules]([VehiculeID])
 );
-GO
-
-
-
-USE TransportDB;
-GO
-
--- Table pour les incidents
-CREATE TABLE Incidents (
-    IncidentID INT IDENTITY(1,1) PRIMARY KEY, -- Identifiant unique de l'incident
-    TrajetID INT, -- Identifiant du trajet concerné
-    Cause NVARCHAR(255), -- Cause de l'incident (météo, panne, accident, etc.)
-    TempsPerdu INT, -- Temps perdu en minutes
-    Responsable NVARCHAR(100), -- Responsable à notifier
-    DateIncident DATE, -- Date de l'incident
-    FOREIGN KEY (TrajetID) REFERENCES Trajets(TrajetID) -- Clé étrangère vers la table Trajets
-);
-GO
-
--- Table pour les notifications
-CREATE TABLE Notifications (
-    NotificationID INT IDENTITY(1,1) PRIMARY KEY, -- Identifiant unique de la notification
-    Message NVARCHAR(255), -- Message de la notification
-    Destinataire NVARCHAR(100), -- Destinataire de la notification
-    DateNotification DATE -- Date de la notification
-);
-GO
-
-
-USE TransportDB;
-GO
-
--- Table pour la maintenance des véhicules
-CREATE TABLE Maintenance (
-    MaintenanceID INT IDENTITY(1,1) PRIMARY KEY, -- Identifiant unique de la maintenance
-    VehiculeID INT, -- Identifiant du véhicule
-    DateMaintenance DATE, -- Date de la maintenance
-    Description NVARCHAR(255), -- Description de la maintenance
-    CoutReparation DECIMAL(18, 2), -- Coût des réparations
-    CoutPieces DECIMAL(18, 2), -- Coût des pièces de remplacement
-    FOREIGN KEY (VehiculeID) REFERENCES Vehicules(VehiculeID) -- Clé étrangère vers la table Vehicules
-);
-GO
