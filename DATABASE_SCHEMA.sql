@@ -138,3 +138,19 @@ CREATE TABLE Notifications (
     DateNotification DATE -- Date de la notification
 );
 GO
+
+
+USE TransportDB;
+GO
+
+-- Table pour la maintenance des véhicules
+CREATE TABLE Maintenance (
+    MaintenanceID INT IDENTITY(1,1) PRIMARY KEY, -- Identifiant unique de la maintenance
+    VehiculeID INT, -- Identifiant du véhicule
+    DateMaintenance DATE, -- Date de la maintenance
+    Description NVARCHAR(255), -- Description de la maintenance
+    CoutReparation DECIMAL(18, 2), -- Coût des réparations
+    CoutPieces DECIMAL(18, 2), -- Coût des pièces de remplacement
+    FOREIGN KEY (VehiculeID) REFERENCES Vehicules(VehiculeID) -- Clé étrangère vers la table Vehicules
+);
+GO
