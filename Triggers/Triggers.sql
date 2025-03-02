@@ -28,3 +28,28 @@ BEGIN
         inserted;
 END
 GO
+
+--Question 31
+
+--meme reponse que la question 27
+
+
+--Question 33
+
+CREATE TRIGGER trg_UpdateVehicleMileage
+ON Trajets
+AFTER INSERT
+AS
+BEGIN
+    -- Mettre à jour le kilométrage du véhicule
+    UPDATE V
+    SET Kilometrage = V.Kilometrage + I.Distance
+    FROM 
+        Vehicules V
+    JOIN 
+        Reservations R ON V.VehiculeID = R.VehiculeID
+    JOIN 
+        inserted I ON R.TrajetID = I.TrajetID;
+END
+GO
+
