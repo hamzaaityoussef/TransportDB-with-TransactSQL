@@ -256,6 +256,44 @@ BEGIN
 END
 GO
 
+-- Question 13
+
+CREATE PROCEDURE sp_GetEmployeesAssignedToVehicle
+    @VehiculeID INT, -- Identifiant du véhicule
+    @StartDate DATE, -- Date de début de la période
+    @EndDate DATE -- Date de fin de la période
+AS
+BEGIN
+    SELECT 
+        E.EmployeID,
+        E.Nom,
+        E.Poste,
+        T.TrajetID,
+        T.DateDepart,
+        T.DateArrivee
+    FROM 
+        Employes E
+    JOIN 
+        Reservations R ON E.EmployeID = R.EmployeID -- Relier les employés aux réservations
+    JOIN 
+        Trajets T ON R.TrajetID = T.TrajetID -- Relier les réservations aux trajets
+    WHERE 
+        R.VehiculeID = @VehiculeID -- Filtrer par véhicule
+        AND T.DateDepart BETWEEN @StartDate AND @EndDate -- Filtrer par période
+        AND E.EmployeID NOT IN (
+            SELECT EmployeID 
+            FROM Absences 
+            WHERE DateAbsence BETWEEN @StartDate AND @EndDate -- Exclure les employés absents
+        );
+END
+GO
+
+
+EXEC sp_GetEmployeesAssignedToVehicle 
+    @VehiculeID = 5, 
+    @StartDate = '2023-10-01', 
+    @EndDate = '2023-10-31';
+
 --------------------------------------------------------------------------------------------------
 -- part of diae :
 
