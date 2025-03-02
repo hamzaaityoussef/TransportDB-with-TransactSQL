@@ -1,0 +1,36 @@
+-- Ajouter des employés
+INSERT INTO Employes (Nom, Entreprise, Poste, Coordonnees)
+VALUES 
+    ('Jean Dupont', 'ABC Corp', 'Manager', '123 Rue Principale, Ville'),
+    ('Marie Curie', 'XYZ Corp', 'Ingénieur', '456 Rue Secondaire, Ville');
+
+-- Ajouter des véhicules
+INSERT INTO Vehicules (Type, Capacite, Immatriculation, Maintenance)
+VALUES 
+    ('Bus', 51, 'ABC-124', '2023-12-30'),
+    ('Van', 10, 'XYZ-789', '2023-11-15');
+
+-- Ajouter des trajets
+INSERT INTO Trajets (Itineraire, DateDepart, HeureDepart, DateArrivee, HeureArrivee, PointCollecte, PointDepot, Distance, Peages)
+VALUES 
+    ('Paris-Lyon', '2023-10-01', '08:00', '2023-10-01', '12:00', 'Paris', 'Lyon', 500, 30),
+    ('Lyon-Marseille', '2023-10-02', '09:00', '2023-10-02', '14:00', 'Lyon', 'Marseille', 300, 20);
+
+
+
+INSERT INTO Conducteurs (Nom, Affectation, HistoriqueConduite)
+VALUES 
+    ('chifor 1', 'route 2', '2 y'),
+    ('chifor2', 'route 3', '3 y');
+
+
+-- Ajouter des réservations
+INSERT INTO Reservations (EmployeID, TrajetID, VehiculeID, ConducteurID)
+VALUES 
+    (1002, 1, 5, 1), -- Jean Dupont affecté au trajet 1 avec le véhicule 1
+    (1003, 2, 6, 2); -- Marie Curie affectée au trajet 2 avec le véhicule 2
+
+-- Ajouter des absences
+INSERT INTO Absences (EmployeID, DateAbsence, Motif)
+VALUES 
+    (2, '2023-10-02', 'Congé maladie'); -- Marie Curie absente le 2023-10-02
