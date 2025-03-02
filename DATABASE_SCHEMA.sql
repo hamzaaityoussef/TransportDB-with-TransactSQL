@@ -112,3 +112,29 @@ CREATE TABLE Factures (
     FOREIGN KEY (VehiculeID) REFERENCES Vehicules(VehiculeID) -- Clé étrangère vers la table Vehicules
 );
 GO
+
+
+
+USE TransportDB;
+GO
+
+-- Table pour les incidents
+CREATE TABLE Incidents (
+    IncidentID INT IDENTITY(1,1) PRIMARY KEY, -- Identifiant unique de l'incident
+    TrajetID INT, -- Identifiant du trajet concerné
+    Cause NVARCHAR(255), -- Cause de l'incident (météo, panne, accident, etc.)
+    TempsPerdu INT, -- Temps perdu en minutes
+    Responsable NVARCHAR(100), -- Responsable à notifier
+    DateIncident DATE, -- Date de l'incident
+    FOREIGN KEY (TrajetID) REFERENCES Trajets(TrajetID) -- Clé étrangère vers la table Trajets
+);
+GO
+
+-- Table pour les notifications
+CREATE TABLE Notifications (
+    NotificationID INT IDENTITY(1,1) PRIMARY KEY, -- Identifiant unique de la notification
+    Message NVARCHAR(255), -- Message de la notification
+    Destinataire NVARCHAR(100), -- Destinataire de la notification
+    DateNotification DATE -- Date de la notification
+);
+GO
