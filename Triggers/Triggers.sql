@@ -53,3 +53,26 @@ BEGIN
 END
 GO
 
+--question 35
+
+CREATE TRIGGER trg_RecalculateTripCost
+ON Trajets
+AFTER UPDATE
+AS
+BEGIN
+    -- Recalculer le coût du trajet si la distance est mise à jour
+    IF UPDATE(Distance)
+    BEGIN
+        UPDATE T
+        SET CoutTotal = (T.Peages + (V.ConsommationCarburant * T.Distance) + V.FraisMaintenance)
+        FROM 
+            Trajets T
+		JOIN 
+            Reservations R ON T.TrajetID = R.TrajetID
+        JOIN 
+            Vehicules V ON R.VehiculeID = V.VehiculeID
+        JOIN 
+            inserted I ON T.TrajetID = I.TrajetID;
+    END
+END
+GO
