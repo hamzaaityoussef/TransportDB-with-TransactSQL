@@ -1,7 +1,7 @@
 USE TransportDB; -- Replace with your database name
 GO
 
--- Table pour les employés
+-- Table pour les employï¿½s
 CREATE TABLE Employes (
     EmployeID INT IDENTITY(1,1) PRIMARY KEY,
     Nom NVARCHAR(100),
@@ -10,7 +10,7 @@ CREATE TABLE Employes (
     Coordonnees NVARCHAR(255)
 );
 
--- Table pour les véhicules
+-- Table pour les vï¿½hicules
 CREATE TABLE Vehicules (
     VehiculeID INT IDENTITY(1,1) PRIMARY KEY,
     Type NVARCHAR(50),
@@ -39,7 +39,7 @@ CREATE TABLE Conducteurs (
     HistoriqueConduite NVARCHAR(MAX)
 );
 
--- Table pour les réservations et affectations
+-- Table pour les rï¿½servations et affectations
 CREATE TABLE Reservations (
     ReservationID INT IDENTITY(1,1) PRIMARY KEY,
     EmployeID INT,
@@ -51,4 +51,35 @@ CREATE TABLE Reservations (
     FOREIGN KEY (VehiculeID) REFERENCES Vehicules(VehiculeID),
     FOREIGN KEY (ConducteurID) REFERENCES Conducteurs(ConducteurID)
 );
-GO
+
+CREATE TABLE Evaluations (
+    EvaluationID INT IDENTITY(1,1) PRIMARY KEY,
+    EmployeID INT,
+    TrajetID INT,
+    Score INT CHECK (Score BETWEEN 1 AND 10), -- Score entre 1 et 10
+    Commentaire NVARCHAR(500),
+    DateEvaluation DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (EmployeID) REFERENCES Employes(EmployeID),
+    FOREIGN KEY (TrajetID) REFERENCES Trajets(TrajetID)
+);
+
+CREATE TABLE Points (
+    PointID INT IDENTITY(1,1) PRIMARY KEY,
+    Nom NVARCHAR(255),
+    Latitude FLOAT,
+    Longitude FLOAT,
+    Type NVARCHAR(50) CHECK (Type IN ('Collecte', 'Depot'))
+);
+
+CREATE TABLE EvaluationsVehicules (
+    EvaluationID INT IDENTITY(1,1) PRIMARY KEY,
+    VehiculeID INT,
+    EmployeID INT,
+    Note INT CHECK (Note BETWEEN 1 AND 5),
+    Commentaire NVARCHAR(500),
+    DateEvaluation DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (VehiculeID) REFERENCES Vehicules(VehiculeID),
+    FOREIGN KEY (EmployeID) REFERENCES Employes(EmployeID)
+);
+
+
