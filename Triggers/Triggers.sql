@@ -53,7 +53,7 @@ BEGIN
 END
 GO
 
---question 35
+--Question 35
 
 CREATE TRIGGER trg_RecalculateTripCost
 ON Trajets
@@ -74,5 +74,41 @@ BEGIN
         JOIN 
             inserted I ON T.TrajetID = I.TrajetID;
     END
+END
+GO
+
+--Question 37
+
+CREATE TRIGGER trg_PreventTripWithoutVehicle
+ON Trajets
+INSTEAD OF INSERT
+AS
+BEGIN
+    -- Vérifier si un véhicule est assigné à l'employé
+    IF EXISTS (
+        SELECT 1
+        FROM inserted I
+        LEFT JOIN Reservations R ON I.TrajetID = R.TrajetID
+        WHERE R.VehiculeID IS NULL -- Aucun véhicule assigné
+    )
+    BEGIN
+        RAISERROR('Un véhicule doit être assigné à l''employé pour ce trajet.', 16, 1);
+        RETURN;
+    END
+
+    -- Si un véhicule est assigné, insérer le trajet
+    INSERT INTO Trajets (Itineraire, DateDepart, HeureDepart, DateArrivee, HeureArrivee, PointCollecte, PointDepot, Distance, Peages)
+    SELECT 
+        Itineraire, 
+        DateDepart, 
+        HeureDepart, 
+        DateArrivee, 
+        HeureArrivee, 
+        PointCollecte, 
+        PointDepot, 
+        Distance, 
+        Peages
+    FROM 
+        inserted;
 END
 GO
