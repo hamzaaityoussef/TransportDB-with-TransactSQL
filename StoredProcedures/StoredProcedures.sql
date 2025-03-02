@@ -405,6 +405,32 @@ GO
 
 
 
+-- Question 19 :
+
+CREATE PROCEDURE sp_CalculateTotalTripDuration
+    @VehiculeID INT, -- Identifiant du véhicule
+    @StartDate DATE, -- Date de début de la période
+    @EndDate DATE -- Date de fin de la période
+AS
+BEGIN
+    SELECT 
+        V.VehiculeID,
+        SUM(DATEDIFF(HOUR, T.DateDepart, T.DateArrivee)) AS TotalDurationHours,
+        SUM(DATEDIFF(MINUTE, T.DateDepart, T.DateArrivee)) AS TotalDurationMinutes
+    FROM 
+        Trajets T
+    JOIN 
+        Reservations R ON T.TrajetID = R.TrajetID -- Relier les trajets aux réservations
+    JOIN 
+        Vehicules V ON R.VehiculeID = V.VehiculeID -- Relier les réservations aux véhicules
+    WHERE 
+        R.VehiculeID = @VehiculeID -- Filtrer par véhicule
+        AND T.DateDepart BETWEEN @StartDate AND @EndDate -- Filtrer par période
+    GROUP BY 
+        V.VehiculeID;
+END
+GO
+
 
 
 
