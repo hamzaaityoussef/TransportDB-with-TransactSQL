@@ -140,3 +140,119 @@ BEGIN
     END
 END
 GO
+
+--------------------------------------------------------------------------------------------------
+-- part of diae :
+
+--Question 30 : 
+CREATE TRIGGER trg_AlerteMaintenance
+ON Vehicules
+AFTER UPDATE
+AS
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM inserted i
+        WHERE i.Kilometrage >= 10000  -- Seuil de kilométrage avant maintenance
+        AND i.DerniereMaintenance IS NULL
+    )
+    BEGIN
+        INSERT INTO Notifications (Message, Destinataire, DateNotification)
+        VALUES ('Alerte: Un véhicule a dépassé le seuil de kilométrage sans maintenance.', 'Gestionnaire', GETDATE());
+    END
+END;
+
+-- Question 32 :
+CREATE TRIGGER trg_AlerteTrajetsMensuels
+ON Reservations
+AFTER INSERT
+AS
+BEGIN
+    DECLARE @EmployeID INT, @NombreTrajets INT;
+
+    SELECT @EmployeID = EmployeID FROM inserted;
+
+    SELECT @NombreTrajets = COUNT(*)
+    FROM Reservations
+    WHERE EmployeID = @EmployeID
+    AND MONTH(DateAffectation) = MONTH(GETDATE())
+    AND YEAR(DateAffectation) = YEAR(GETDATE());
+
+    IF @NombreTrajets > 10  -- Seuil à ajuster
+    BEGIN
+        INSERT INTO Notifications (Message, Destinataire, DateNotification)
+        VALUES ('Alerte: Un employé a dépassé le nombre autorisé de trajets ce mois.', 'RH', GETDATE());
+    END
+END;
+
+-- Question 34 :
+CREATE TRIGGER trg_PreventDeleteVehicule
+ON Vehicules
+INSTEAD OF DELETE
+AS
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM deleted d
+        JOIN Trajets t ON d.VehiculeID = t.TrajetID
+    )
+    BEGIN
+        RAISERROR ('Suppression impossible: Le véhicule est actuellement utilisé dans un trajet.', 16, 1);
+    END
+    ELSE
+    BEGIN
+        DELETE FROM Vehicules WHERE VehiculeID IN (SELECT VehiculeID FROM deleted);
+    END
+END;
+
+-- Question 36 :
+CREATE TRIGGER trg_NotificationKilometrage
+ON Vehicules
+AFTER UPDATE
+AS
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM inserted i
+        WHERE i.Kilometrage >= 15000 -- Seuil de kilométrage critique
+        AND (i.DerniereMaintenance IS NULL OR DATEDIFF(DAY, i.DerniereMaintenance, GETDATE()) > 180) -- Plus de 6 mois sans maintenance
+    )
+    BEGIN
+        INSERT INTO Notifications (Message, Destinataire, DateNotification)
+        VALUES ('Alerte: Un véhicule doit être entretenu immédiatement.', 'Responsable Maintenance', GETDATE());
+    END
+END;
+
+-- Question 38 :
+CREATE TRIGGER trg_NotificationAnnulationTrajet
+ON Trajets
+AFTER UPDATE
+AS
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM inserted i
+        WHERE i.Statut = 'Annule´'
+    )
+    BEGIN
+        INSERT INTO Notifications (Message, Destinataire, DateNotification)
+        VALUES ('Un trajet a été annulé. Veuillez en vérifier la raison.', 'Gestionnaire', GETDATE());
+    END
+END;
+
+-- Question 40 :
+CREATE TRIGGER trg_ArchiveTrajets
+ON Trajets
+AFTER UPDATE
+AS
+BEGIN
+    INSERT INTO Trajets_Archive (TrajetID, Itineraire, DateDepart, HeureDepart, DateArrivee, HeureArrivee, PointCollecte, PointDepot, Distance, Peages, Statut, RaisonAnnulation, CoutTotal)
+    SELECT *
+    FROM Trajets
+    WHERE Statut = 'Termine´' 
+    AND DATEDIFF(DAY, DateArrivee, GETDATE()) > 90; -- Archivage après 3 mois
+
+    DELETE FROM Trajets
+    WHERE Statut = 'Termine´' 
+    AND DATEDIFF(DAY, DateArrivee, GETDATE()) > 90;
+END;

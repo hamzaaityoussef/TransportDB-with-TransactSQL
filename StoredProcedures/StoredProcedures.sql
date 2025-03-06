@@ -681,7 +681,7 @@ CREATE PROCEDURE AttribuerVehicule
 AS
 BEGIN
 
-    -- Find the most suitable available vehicle
+    
     SELECT TOP 1 @VehiculeID = V.VehiculeID
     FROM Vehicules V
     WHERE V.Capacite >= @CapaciteRequise
@@ -690,9 +690,9 @@ BEGIN
           SELECT VehiculeID FROM Reservations
           WHERE TrajetID = @TrajetID
       )
-    ORDER BY V.Capacite ASC;  -- Prefer smaller but sufficient vehicles
+    ORDER BY V.Capacite ASC;  
 
-    -- If a vehicle is available, register the reservation
+    
     IF @VehiculeID IS NOT NULL
     BEGIN
         INSERT INTO Reservations (EmployeID, TrajetID, VehiculeID, ConducteurID)
